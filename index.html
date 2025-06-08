@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ziia Chat</title>
+<style>
+  body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f4f3ff;
+}
+
+.login-container, .register-container {
+  max-width: 400px;
+  margin: 50px auto;
+  border-radius: 10px;
+  padding: 30px;
+}
+
+.tab-header {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 10px;
+  background: #dcdafe;
+  text-align: center;
+  cursor: pointer;
+}
+
+.tab-button.active {
+  background: #6c63ff;
+  color: white;
+  font-weight: bold;
+}
+
+input, button {
+  width: 94%;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+button {
+  background: #6c63ff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 12px 0px;
+  font-size: 15px;
+  font-family: system-ui;
+  font-weight: 500;
+  width: 99%;
+}
+
+.hide {
+  display: none;
+}
+
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f4f3ff;
+}
+
+.chat-header {
+  background: #6c63ff;
+  color: white;
+  padding: 0px 15px;
+  font-size: 16px;
+  font-family: system-ui;
+}
+
+.chat-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.chat-header-left img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.chat-header-left div {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header-left .name {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.chat-header-left .status {
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.menu-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+#menuDropdown {
+  display: none;
+  position: absolute;
+  right: 10px;
+  top: 60px;
+  background: white;
+  color: black;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  border-radius: 5px;
+  z-index: 100;
+}
+
+#menuDropdown div {
+  padding: 10px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+}
+
+#menuDropdown div:last-child {
+  border-bottom: none;
+}
+
+#menuDropdown div:hover {
+  background: #e1dfff;
+}
+
+.chat-messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.message {
+  position: relative;
+  max-width: 80%;
+  margin: 8px;
+  padding: 10px 40px 20px 10px;
+  word-wrap: break-word;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.sent {
+  background: #c6c3ff;
+  align-self: flex-end;
+  border-bottom-right-radius: 0;
+}
+
+.received {
+  background: white;
+  align-self: flex-start;
+  border-bottom-left-radius: 0;
+}
+
+.timestamp {
+  font-size: 12px;
+  color: #596e87;
+  text-align: right;
+  margin-top: 5px;
+}
+
+.status {
+  position: absolute;
+  bottom: 5px;
+  right: 10px;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.chat-input {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  background-color: #ecebff;
+  border-top: 1px solid #ddd;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chat-input input[type="text"] {
+  flex: 1;
+  padding: 12px 15px;
+  border: none;
+  border-radius: 25px;
+  outline: none;
+  font-size: 16px;
+  background-color: white;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chat-input button {
+  background-color: #6c63ff;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  padding: 12px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  font-size: 18px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.chat-input button:hover {
+  background-color: #5a52e0;
+  transform: scale(1.05);
+}
+
+.chat-input button:active {
+  background-color: #4d45c7;
+  transform: scale(0.95);
+}
+
+#loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.spinner {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #6c63ff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.profile-online { color: #fff; }
+
+.profile-pic-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-pic-wrapper img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.profile-pic-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 29px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid white;
+  border-radius: 50%;
+  background-color: gray;
+  transition: background-color 0.3s ease;
+}
+
+.profile-pic-wrapper.online::after {
+  background-color: #6c63ff;
+}
+
+#adminTyping {
+  color:#fff;
+  font-style: italic;
+  font-size: 14px;
+  margin-bottom: 1px;
+}
+
+
+  </style>
+
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div></div>
+
+
+
+<!-- Custom Error Popup Modal -->
+<div id="errorPopup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:1000; max-width:90%; width:300px; text-align:center;">
+  <div id="errorMessage" style="font-size:16px; margin-bottom:15px;"></div>
+  <button onclick="closeError()" style="background:#075e54; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">OK</button>
+</div>
+
+
+
+
+
+<!-- Auth UI -->
+<div class="login-container" id="authBox" style="display: none;">
+  <div class="tab-header">
+    <div class="tab-button active" onclick="toggleAuth('login')">Login</div>
+    <div class="tab-button" onclick="toggleAuth('register')">Register</div>
+  </div>
+
+  <div id="loginForm">
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <a href="reset.html" style="color:#6c63ff; font-size:14px;">Forgot Password?</a>
+
+  </div>
+
+  <div id="registerForm" class="hide">
+    <input type="text" id="regName" placeholder="Your Name">
+    <input type="email" id="regEmail" placeholder="Email">
+    <input type="password" id="regPassword" placeholder="Password">
+    <button onclick="register()">Register</button>
+  </div>
+</div>
+
+<!-- Chat UI -->
+<div class="chat-window" id="chatApp" style="display: none;">
+  <div class="chat-header">
+    <div class="chat-header-content">
+      <div class="chat-header-left">
+
+       <div class="profile-pic-wrapper" id="adminPic">
+  <img src="https://ziiax.fwh.is/icon-512.png" alt="Ziia">
+</div>
+
+        <div class="profile-online">
+          <span class="name">ZIIA</span>
+          <div id="adminTyping" ></div>
+        
+
+          
+
+        </div>
+      </div>
+      <div style="position: relative;">
+        <button class="menu-btn" onclick="toggleMenu()"> <i class="fas fa-ellipsis-v"></i></button>
+        <div id="menuDropdown">
+          <div onclick="logout()">Logout</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="chat-messages" id="messages"></div>
+  <div class="chat-input">
+    <input type="text" id="messageInput" placeholder="Message..." />
+    <button onclick="sendMessage()">  <i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDWRfmNGsp3cBvD5mODOj1g7uOFbWXph-k",
+  authDomain: "exclusivechat-64482.firebaseapp.com",
+  projectId: "exclusivechat-64482",
+  storageBucket: "exclusivechat-64482.appspot.com",
+  messagingSenderId: "159353508205",
+  appId: "1:159353508205:web:595954835fac71ef53ca64",
+  databaseURL: "https://exclusivechat-64482-default-rtdb.firebaseio.com/"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();  // Use db consistently
+
+let fanName = "";
+
+// Check authentication state
+auth.onAuthStateChanged(user => {
+  if (user) {
+    // Fetch user data after authentication
+    db.ref("users/" + user.uid).once("value").then(snapshot => {
+      fanName = snapshot.val().fanName;
+      launchChat();
+      document.getElementById("loadingOverlay").style.display = "none";
+    });
+  } else {
+    // Show the authentication box if user is not authenticated
+    document.getElementById("authBox").style.display = "block";
+    document.getElementById("loadingOverlay").style.display = "none";
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function toggleAuth(type) {
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    if (type === 'login') {
+      document.querySelector('.tab-button:nth-child(1)').classList.add('active');
+      document.getElementById('loginForm').classList.remove('hide');
+      document.getElementById('registerForm').classList.add('hide');
+    } else {
+      document.querySelector('.tab-button:nth-child(2)').classList.add('active');
+      document.getElementById('registerForm').classList.remove('hide');
+      document.getElementById('loginForm').classList.add('hide');
+    }
+  }
+
+function register() {
+  const name = document.getElementById("regName").value.trim();
+  const email = document.getElementById("regEmail").value.trim();
+  const password = document.getElementById("regPassword").value;
+
+  if (!name || !email || !password) {
+    showError("Please fill all fields");
+    return;
+  }
+
+  document.getElementById("loadingOverlay").style.display = "flex"; // Show loading
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(userCredential => {
+      fanName = name;
+      db.ref("users/" + userCredential.user.uid).set({ fanName });
+      // Chat launch handled by onAuthStateChanged
+    })
+    .catch(error => {
+      document.getElementById("loadingOverlay").style.display = "none"; // Hide loading on error
+      if (error.code === 'auth/email-already-in-use') {
+        showError("This email is already registered. Please try logging in or use a different email.");
+      } else {
+        showError(error.message);
+      }
+    });
+}
+
+
+
+function login() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  if (!email || !password) {
+    showError("Please fill all fields");
+    return;
+  }
+
+  document.getElementById("loadingOverlay").style.display = "flex"; // Show loading
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => {
+      // Chat launch handled by onAuthStateChanged
+    })
+    .catch(error => {
+      document.getElementById("loadingOverlay").style.display = "none"; // Hide loading on error
+      showError(error.message);
+    });
+}
+
+
+
+
+
+
+
+
+
+function setTypingStatus(isTyping) {
+  const typingRef = db.ref(`chats/${fanName}/typingStatus/fan`);
+  typingRef.set(isTyping ? "typing" : "idle");
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const msgInput = document.getElementById("messageInput");
+  msgInput.addEventListener("input", () => {
+    setTypingStatus(true);
+    clearTimeout(window.typingTimeout);
+    window.typingTimeout = setTimeout(() => {
+      setTypingStatus(false);
+    }, 3000);
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function launchChat() {
+    document.getElementById("authBox").style.display = "none";
+    document.getElementById("chatApp").style.display = "flex";
+    loadMessages();
+      listenToAdminTyping();
+  }
+
+
+
+function listenToAdminTyping() {
+  const typingRef = db.ref("chats/" + fanName + "/typingStatus/admin");
+  typingRef.on("value", snap => {
+    const status = snap.val();
+    const typingEl = document.getElementById("adminTyping");
+    if (status === "typing") {
+      typingEl.innerText = "typing...";
+    } else {
+      typingEl.innerText = "";
+    }
+  });
+}
+
+
+
+
+
+
+function sendMessage() {
+  const msgInput = document.getElementById("messageInput");
+  const msg = msgInput.value.trim();
+  if (msg === "") return;
+
+  const timestamp = Date.now();
+  const message = {
+    sender: "fan",
+    text: msg,
+    timestamp: timestamp,
+    status: "sent"
+  };
+
+  db.ref("chats/" + fanName).push(message).then((ref) => {
+    ref.update({ status: "delivered" });
+  });
+
+  msgInput.value = "";
+
+  // Scroll to bottom smoothly
+  setTimeout(() => {
+    const messagesDiv = document.getElementById("messages");
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }, 100);
+
+  // 🔥 Fix: Keep keyboard open on mobile
+  msgInput.focus();
+}
+
+
+
+
+
+
+
+  function loadMessages() {
+    const messagesRef = db.ref("chats/" + fanName);
+    messagesRef.orderByChild("timestamp").on("child_added", function(snapshot) {
+      const msg = snapshot.val();
+      const existingMessagesById = document.querySelectorAll(`.message[data-id="${snapshot.key}"]`);
+      if (existingMessagesById.length > 0) return;
+
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("message");
+      msgDiv.classList.add(msg.sender === "fan" ? "sent" : "received");
+      msgDiv.setAttribute("data-id", snapshot.key);
+
+      // Only show status icon for fan messages
+      let statusIcon = "";
+      if (msg.sender === "fan") {
+        if (msg.status === "sent") {
+          statusIcon = "✓";
+        } else if (msg.status === "delivered") {
+          statusIcon = "✓✓";
+        } else if (msg.status === "seen") {
+          statusIcon = "<span style='color: blue;'>✓✓</span>";
+        }
+      }
+
+      const messageText = msg.text.replace(/(https?:\/\/[^\s]+)/g, (url) => {
+        return `<a href="${url}" target="_blank" style="color: #075e54;">${url}</a>`;
+      });
+
+      const timestamp = new Date(msg.timestamp).toLocaleTimeString();
+      msgDiv.innerHTML = `
+        ${messageText}
+        ${statusIcon ? `<div class="status">${statusIcon}</div>` : ""}
+        <div class="timestamp">${timestamp}</div>
+      `;
+
+      document.getElementById("messages").appendChild(msgDiv);
+      document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+
+      // Automatically mark admin-sent message as seen when opened by fan
+      if (msg.sender !== "fan" && msg.status === "delivered") {
+        db.ref(`chats/${fanName}/${snapshot.key}`).update({ status: "seen" });
+      }
+    });
+
+    // Update status ticks in real-time for fan messages
+    messagesRef.on("child_changed", function(snapshot) {
+      const msg = snapshot.val();
+      if (msg.sender !== "fan") return;
+
+      const messageDiv = document.querySelector(`.message[data-id="${snapshot.key}"]`);
+      if (messageDiv) {
+        const statusSpan = messageDiv.querySelector(".status");
+        if (statusSpan) {
+          statusSpan.innerHTML = getMessageStatus(msg.status);
+        }
+      }
+    });
+  }
+
+  function getMessageStatus(status) {
+    switch(status) {
+      case "sent":
+        return "✓";
+      case "delivered":
+        return "✓✓";
+      case "seen":
+        return "<span style='color: blue;'>✓✓</span>";
+      default:
+        return "✓";
+    }
+  }
+
+  function toggleMenu() {
+    const menu = document.getElementById("menuDropdown");
+    menu.style.display = (menu.style.display === "block") ? "none" : "block";
+  }
+
+  function logout() {
+    auth.signOut().then(() => {
+      location.reload();
+    });
+  }
+
+  function showError(message) {
+    document.getElementById("errorMessage").textContent = message;
+    document.getElementById("errorPopup").style.display = "block";
+  }
+
+  function closeError() {
+    document.getElementById("errorPopup").style.display = "none";
+  }
+
+  document.addEventListener('click', function(event) {
+    const menu = document.getElementById("menuDropdown");
+    const button = document.querySelector('.menu-btn');
+    if (!menu.contains(event.target) && !button.contains(event.target)) {
+      menu.style.display = "none";
+    }
+  });
+
+
+
+
+
+
+
+
+
+
+
+function loadMessages() {
+  const messagesRef = db.ref("chats/" + fanName);
+  messagesRef.orderByChild("timestamp").on("child_added", function(snapshot) {
+    const msg = snapshot.val();
+    const existingMessagesById = document.querySelectorAll(`.message[data-id="${snapshot.key}"]`);
+    if (existingMessagesById.length > 0) return;
+
+    const msgDiv = document.createElement("div");
+    msgDiv.classList.add("message");
+    msgDiv.classList.add(msg.sender === "fan" ? "sent" : "received");
+    msgDiv.setAttribute("data-id", snapshot.key);
+
+    let statusIcon = "";
+    if (msg.sender === "fan") {
+      if (msg.status === "sent") {
+        statusIcon = "✓";
+      } else if (msg.status === "delivered") {
+        statusIcon = "✓✓";
+      } else if (msg.status === "seen") {
+        statusIcon = "<span style='color: blue;'>✓✓</span>";
+      }
+    }
+
+ // Safely extract text (avoid .replace on undefined)
+const rawText = msg.text || "";
+const messageText = rawText.replace(/(https?:\/\/[^\s]+)/g, (url) => {
+  return `<a href="${url}" target="_blank" style="color: #075e54;">${url}</a>`;
+});
+
+
+    const timestamp = formatTimestamp(msg.timestamp);
+    msgDiv.innerHTML = `
+      ${messageText}
+      ${statusIcon ? `<div class="status">${statusIcon}</div>` : ""}
+      <div class="timestamp">${timestamp}</div>
+    `;
+
+    document.getElementById("messages").appendChild(msgDiv);
+    document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+
+
+
+
+
+
+    // Update the admin profile status based on the last message status
+    updateAdminStatus();
+
+    // Automatically mark admin-sent message as seen when opened by fan
+    if (msg.sender !== "fan" && msg.status === "delivered") {
+      db.ref(`chats/${fanName}/${snapshot.key}`).update({ status: "seen" });
+    }
+  });
+
+  // Update status ticks in real-time for fan messages
+  messagesRef.on("child_changed", function(snapshot) {
+    const msg = snapshot.val();
+    if (msg.sender !== "fan") return;
+
+    const messageDiv = document.querySelector(`.message[data-id="${snapshot.key}"]`);
+    if (messageDiv) {
+      const statusSpan = messageDiv.querySelector(".status");
+      if (statusSpan) {
+        statusSpan.innerHTML = getMessageStatus(msg.status);
+      }
+    }
+
+    // Re-check if the last message is seen after any update
+    updateAdminStatus();
+  });
+}
+
+// Function to check the last message's status and update the admin profile status
+function updateAdminStatus() {
+  const messagesRef = db.ref("chats/" + fanName);
+  messagesRef.limitToLast(1).once("value", snapshot => {
+    const lastMessage = snapshot.val();
+    const lastMessageStatus = lastMessage ? Object.values(lastMessage)[0].status : null;
+
+    if (lastMessageStatus === "seen") {
+      // Mark admin as online (green dot)
+      document.getElementById("adminPic").classList.add("online");
+    } else {
+      // Mark admin as offline (gray dot)
+      document.getElementById("adminPic").classList.remove("online");
+    }
+  });
+}
+
+
+
+
+
+
+function formatTimestamp(timestamp) {
+  const date = new Date(timestamp);
+  const now = new Date();
+
+  const isToday = date.toDateString() === now.toDateString();
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  const hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const formattedTime = `${((hours + 11) % 12 + 1)}:${minutes} ${ampm}`;
+
+  if (isToday) return `Today at ${formattedTime}`;
+  if (isYesterday) return `Yesterday at ${formattedTime}`;
+
+  const options = { month: 'short', day: 'numeric', year: 'numeric' };
+  return `${date.toLocaleDateString(undefined, options)} at ${formattedTime}`;
+}
+
+
+</script>
+
+
+
+</body>
+</html>
