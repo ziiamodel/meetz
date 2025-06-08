@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Chat Panel</title>
+
+  <style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f2f7fc;
+  color: #2a2a2a;
+}
+
+h2 {
+  margin: 0;
+  padding: 15px;
+  background: #4aa3df;
+  color: white;
+  text-align: center;
+  font-weight: 500;
+  border-bottom: 2px solid #378ccc;
+}
+
+#loginPanel {
+  padding: 20px;
+  max-width: 400px;
+  margin: 40px auto;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#loginPanel input,
+#loginPanel button {
+  padding: 12px;
+  width: 100%;
+  margin: 10px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 16px;
+}
+
+#loginPanel input {
+  background: #f9fcff;
+  color: #333;
+}
+
+#loginPanel button {
+  background: #4aa3df;
+  color: #ffffff;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s;
+}
+
+#loginPanel button:hover {
+  background: #378ccc;
+}
+
+.container {
+  display: flex;
+  height: 90vh;
+}
+
+.sidebar {
+  width: 30%;
+  background: #e3f0fb;
+  overflow-y: auto;
+  border-right: 2px solid #d0e2f2;
+}
+
+.fan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid #d0e2f2;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.fan:hover {
+  background: #d6e9f9;
+}
+
+.fan.active {
+  background-color: #c6e2fa;
+}
+
+.avatar {
+  background: #4aa3df;
+  color: #fff;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.fan-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  background: #f44336;
+  border-radius: 50%;
+  margin-left: 10px;
+}
+
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f2f7fc;
+}
+
+.chat-box {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.message {
+  margin: 10px 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  max-width: 70%;
+  position: relative;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.admin {
+  background: #4aa3df;
+  color: #ffffff;
+  align-self: flex-end;
+}
+
+.fan {
+  background: #ffffff;
+  color: #333;
+  align-self: flex-start;
+  border: 1px solid #d0e2f2;
+}
+
+.timestamp {
+  font-size: 11px;
+  color: #351414;
+  margin-top: 5px;
+  text-align: right;
+}
+
+.status {
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+.status.seen {
+  color: #4aa3df;
+}
+
+.chat-input {
+  display: flex;
+  border-top: 1px solid #d0e2f2;
+  padding: 15px;
+  background: #ffffff;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 12px;
+  background: #f9fcff;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.chat-input button {
+  margin-left: 12px;
+  padding: 12px 20px;
+  background: #4aa3df;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.chat-input button:hover {
+  background: #378ccc;
+}
+
+#typingStatus {
+  font-size: 13px;
+  color: #666;
+  margin: 8px 20px;
+}
+
+@media(max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: 200px;
+  }
+
+  .chat-area {
+    height: calc(100vh - 250px);
+  }
+}
+
+
+  </style>
+</head>
+<body>
+
+<h2>💬 Admin Chat Panel</h2>
+
+<div id="loginPanel">
+  <h3 style="text-align:center;">Admin Login</h3>
+  <input type="email" id="adminEmail" placeholder="Email">
+  <input type="password" id="adminPassword" placeholder="Password">
+  <button onclick="adminLogin()">Login</button>
+  <p id="loginStatus" style="color: #f44336;"></p>
+</div>
+
+<div class="container" id="adminPanel" style="display:none;">
+  <div class="sidebar" id="fanList"></div>
+  <div class="chat-area">
+    <div class="chat-box" id="chatBox"></div>
+    <p id="typingStatus"></p>
+    <div class="chat-input">
+      <input type="text" id="adminMessage" placeholder="Type a message..." oninput="sendTypingStatus()" />
+      <button onclick="sendAdminMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<!-- Your existing JS functionality remains unchanged -->
+
+<!-- Paste your full working JS script below this comment -->
+<!-- If needed, I can refactor the JS next for better structure -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDWRfmNGsp3cBvD5mODOj1g7uOFbWXph-k",
+    authDomain: "exclusivechat-64482.firebaseapp.com",
+    projectId: "exclusivechat-64482",
+    storageBucket: "exclusivechat-64482.appspot.com",
+    messagingSenderId: "159353508205",
+    appId: "1:159353508205:web:595954835fac71ef53ca64",
+    databaseURL: "https://exclusivechat-64482-default-rtdb.firebaseio.com/"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
+  const adminUID = "yEDB99AJniWaOXfVwVex5qWMWiA2";
+
+  let selectedFan = '';
+  let activeChatRef = null;
+  let typingTimeout;
+
+  function adminLogin() {
+    const email = document.getElementById('adminEmail').value;
+    const password = document.getElementById('adminPassword').value;
+
+    auth.signInWithEmailAndPassword(email, password)
+      .then(userCred => {
+        if (userCred.user.uid === adminUID) {
+          document.getElementById('loginPanel').style.display = 'none';
+          document.getElementById('adminPanel').style.display = 'flex';
+          loadFans();
+        } else {
+          document.getElementById('loginStatus').innerText = "Access denied: Not admin.";
+          auth.signOut();
+        }
+      })
+      .catch(error => {
+        document.getElementById('loginStatus').innerText = "Login failed: " + error.message;
+      });
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user && user.uid === adminUID) {
+      document.getElementById('loginPanel').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'flex';
+      loadFans();
+    }
+  });
+
+  function loadFans() {
+    db.ref('users').on('value', snapshot => {
+      document.getElementById('fanList').innerHTML = '';
+      const users = snapshot.val();
+
+      Object.keys(users).forEach(uid => {
+        const fanName = users[uid].fanName;
+
+        const fanDiv = document.createElement('div');
+        fanDiv.className = 'fan';
+        fanDiv.onclick = () => loadFanChat(fanName);
+
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'fan-info';
+        infoDiv.innerHTML = `
+          <div class="avatar">${fanName.charAt(0).toUpperCase()}</div>
+          <strong>${fanName}</strong>
+        `;
+
+        const dotDiv = document.createElement('div');
+        dotDiv.id = `dot-${fanName}`;
+
+        const typingDiv = document.createElement('div');
+        typingDiv.id = `typing-${fanName}`;
+        typingDiv.style.fontSize = '12px';
+        typingDiv.style.color = 'gray';
+
+        fanDiv.appendChild(infoDiv);
+        fanDiv.appendChild(dotDiv);
+        fanDiv.appendChild(typingDiv);
+        document.getElementById('fanList').appendChild(fanDiv);
+
+        // Fix closure issue by using let-scoped copy
+        const fanNameCopy = fanName;
+
+        // Listen for unread messages
+        db.ref(`chats/${fanNameCopy}`).on('value', chatSnap => {
+          let showDot = false;
+          chatSnap.forEach(msg => {
+            const val = msg.val();
+            if (val.sender !== 'admin' && val.status !== 'seen') {
+              showDot = true;
+            }
+          });
+          const dotElement = document.getElementById(`dot-${fanNameCopy}`);
+          if (dotElement) {
+            dotElement.innerHTML = showDot ? '<div class="dot"></div>' : '';
+          }
+        });
+
+        // Typing indicator
+        db.ref(`chats/${fanNameCopy}/typingStatus/fan`).on('value', typingSnap => {
+          const typingStatus = typingSnap.val();
+          const typingIndicator = document.getElementById(`typing-${fanNameCopy}`);
+          if (typingIndicator) {
+            typingIndicator.innerText = typingStatus === 'typing' ? 'Typing...' : '';
+          }
+        });
+      });
+    });
+  }
+
+  function loadFanChat(fanName) {
+    selectedFan = fanName;
+
+    if (activeChatRef) activeChatRef.off();
+    activeChatRef = db.ref(`chats/${fanName}`);
+
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = '';
+
+    activeChatRef.on('child_added', snapshot => {
+      const data = snapshot.val();
+      const key = snapshot.key;
+      if (key === "typingStatus") return;
+      if (data && data.text && data.timestamp) {
+        displayMessage(data.text, data.sender, data.timestamp, data.status);
+      }
+    });
+
+    activeChatRef.on('value', snap => {
+      chatBox.innerHTML = '';
+      const messages = snap.val();
+
+      for (let id in messages) {
+        const msg = messages[id];
+        if (id === 'typingStatus') continue;
+
+        const div = document.createElement('div');
+        div.className = 'message ' + (msg.sender === 'admin' ? 'admin' : 'fan');
+
+        const msgDate = new Date(msg.timestamp || 0);
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+
+        let dateString = '';
+        if (msgDate.toDateString() === today.toDateString()) {
+          dateString = 'Today';
+        } else if (msgDate.toDateString() === yesterday.toDateString()) {
+          dateString = 'Yesterday';
+        } else {
+          dateString = msgDate.toLocaleDateString();
+        }
+
+        const timeString = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        div.innerHTML = `
+          ${msg.text || 'undefined'}
+          <div class="timestamp">${dateString}, ${timeString}</div>
+        `;
+
+        if (msg.status === 'seen') {
+          const statusDiv = document.createElement('div');
+          statusDiv.classList.add('status', 'seen');
+          statusDiv.innerText = '✓✓';
+          div.appendChild(statusDiv);
+        }
+
+        chatBox.appendChild(div);
+      }
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      snap.forEach(childSnap => {
+        const id = childSnap.key;
+        const val = childSnap.val();
+        if (id !== 'typingStatus' && val.sender !== 'admin' && val.status !== 'seen') {
+          db.ref(`chats/${fanName}/${id}`).update({ status: 'seen' });
+        }
+      });
+
+      // Highlight active fan
+      document.querySelectorAll('.fan').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.fan').forEach(el => {
+        if (el.innerText.includes(fanName)) el.classList.add('active');
+      });
+    });
+  }
+
+  function sendAdminMessage() {
+    const msg = document.getElementById('adminMessage').value.trim();
+    if (!msg || !selectedFan) return;
+
+    db.ref(`chats/${selectedFan}`).push({
+      sender: 'admin',
+      text: msg,
+      timestamp: Date.now(),
+      status: 'sent'
+    });
+
+    document.getElementById('adminMessage').value = '';
+  }
+
+  function sendTypingStatus() {
+    if (!selectedFan) return;
+
+    db.ref(`chats/${selectedFan}/typingStatus/admin`).set('typing');
+
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      db.ref(`chats/${selectedFan}/typingStatus/admin`).set('');
+    }, 2000);
+  }
+
+  function displayMessage(text, sender, timestamp, status) {
+    const chatBox = document.getElementById('chatBox');
+    const div = document.createElement('div');
+    div.className = 'message ' + (sender === 'admin' ? 'admin' : 'fan');
+
+    const msgDate = new Date(timestamp || 0);
+    const timeString = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    let dateString = '';
+    if (msgDate.toDateString() === today.toDateString()) {
+      dateString = 'Today';
+    } else if (msgDate.toDateString() === yesterday.toDateString()) {
+      dateString = 'Yesterday';
+    } else {
+      dateString = msgDate.toLocaleDateString();
+    }
+
+    div.innerHTML = `
+      ${text || 'undefined'}
+      <div class="timestamp">${dateString}, ${timeString}</div>
+    `;
+
+    if (status === 'seen') {
+      const statusDiv = document.createElement('div');
+      statusDiv.classList.add('status', 'seen');
+      statusDiv.innerText = '✓✓';
+      div.appendChild(statusDiv);
+    }
+
+    chatBox.appendChild(div);
+  }
+</script>
+
+</body>
+</html>
