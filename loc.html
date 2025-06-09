@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Share Your Location</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+    button { padding: 10px 15px; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #3367d6; }
+    #status { margin-top: 20px; padding: 10px; border-radius: 4px; }
+    .success { background: #e6f4ea; color: #137333; }
+    .error { background: #fce8e6; color: #c5221f; }
+  </style>
+</head>
+<body>
+  <h1>Share Your Location</h1>
+  <p>Click the button below to share your current location.</p>
+  
+  <button id="shareBtn">Share Location</button>
+  <div id="status"></div>
+
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAhSmhfC2D_o5HHsIg99Eu9bQavrwYfKlc",
+      authDomain: "location-test-1b416.firebaseapp.com",
+      projectId: "location-test-1b416",
+      storageBucket: "location-test-1b416.appspot.com",
+      messagingSenderId: "918321098509",
+      appId: "1:918321098509:web:74013e99b8463fdfbb0a44",
+      measurementId: "G-Y5HEJYSG9T"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const shareBtn = document.getElementById('shareBtn');
+    const statusDiv = document.getElementById('status');
+
+    shareBtn.addEventListener('click', async () => {
+      if (!navigator.geolocation) {
+        showStatus('Geolocation is not supported by your browser', 'error');
+        return;
+      }
+
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+
+        const { latitude, longitude } = position.coords;
+        
+        // Generate a simple user ID
+        const userId = 'user_' + Math.random().toString(36).substring(2, 9);
+        
+        await addDoc(collection(db, 'locations'), {
+          userId,
+          lat: latitude,
+          lng: longitude,
+          timestamp: serverTimestamp()
+        });
+
+        showStatus('Location shared successfully!', 'success');
+      } catch (error) {
+        showStatus(`Error: ${error.message}`, 'error');
+      }
+    });
+
+    function showStatus(message, type) {
+      statusDiv.textContent = message;
+      statusDiv.className = type;
+    }
+  </script>
+</body>
+</html>
