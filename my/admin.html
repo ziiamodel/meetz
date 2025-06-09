@@ -1,1 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PhotoScroller - Admin & Feed</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/> 
+  <style>
+    :root {
+      --primary-color: #4285f4;
+      --primary-dark: #3367d6;
+      --error-color: #ff4444;
+      --success-color: #00C851;
+      --text-color: #333;
+      --text-light: #777;
+      --border-color: #ddd;
+      --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      --profile-header-height: 180px;
+    }
 
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: var(--text-color);
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .app-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      min-height: 100vh;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+      position: relative;
+      padding-bottom: 60px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      background: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      box-shadow: var(--card-shadow);
+    }
+
+    .logo {
+      font-weight: bold;
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      background: #f0f0f0;
+      border-radius: 20px;
+      padding: 5px 10px;
+      width: 200px;
+    }
+
+    .search-bar input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      padding: 5px;
+    }
+
+    .photo-feed {
+      padding: 10px;
+    }
+
+    .photo-card {
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+
+    .photo-header {
+      padding: 12px 15px;
+      display: flex;
+      align-items: center;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+      object-fit: cover;
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .username {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .location {
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    .photo-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1/1;
+      background: #eee;
+    }
+
+    .photo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      cursor: pointer;
+    }
+
+    .photo-actions {
+      padding: 12px 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .action-icons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .action-icon {
+      font-size: 1.5rem;
+      color: var(--text-color);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .action-icon:hover {
+      transform: scale(1.1);
+    }
+
+    .action-icon.liked {
+      color: #ed4956;
+    }
+
+    .save-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .save-icon.saved {
+      color: var(--primary-color);
+    }
+
+    .photo-likes {
+      padding: 0 15px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+    }
+
+    .photo-caption {
+      padding: 0 15px 12px;
+      font-size: 0.9rem;
+    }
+
+    .caption-username {
+      font-weight: 600;
+      margin-right: 5px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      max-width: 600px;
+      margin: 0 auto;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+
+    .nav-icon {
+      font-size: 1.4rem;
+      color: #666;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .nav-icon.active {
+      color: var(--primary-color);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      position: relative;
+      max-width: 90%;
+      max-height: 80vh;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .modal-img {
+      max-width: 100%;
+      max-height: 80vh;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: -30px;
+      right: -10px;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      background: red;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 28px;
+    }
+
+    .modal-link {
+      display: block;
+      text-align: center;
+      color: white;
+      margin-top: 10px;
+      text-decoration: none;
+      background: var(--primary-color);
+      padding: 8px 15px;
+      border-radius: 4px;
+    }
+
+    .admin-panel {
+      padding: 20px;
+    }
+
+    .admin-actions {
+      margin-bottom: 20px;
+    }
+
+    .post-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .post-item:last-child {
+      border-bottom: none;
+    }
+
+    .post-controls button {
+      margin-left: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-size: 1rem;
+    }
+
+    /* Modal for Adding/Editing */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 10px;
+      position: relative;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button[type="submit"] {
+      margin-top: 15px;
+      padding: 10px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">ZIIAX</div>
+    <div class="header-actions">
+      <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search..." id="searchInput">
+      </div>
+    </div>
+  </header>
+
+  <!-- Photo Feed -->
+  <div class="photo-feed" id="photoFeed"></div>
+  <div class="loading" id="loadingMessage">Loading photos...</div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-icon active" data-page="home"><i class="fas fa-home"></i></div>
+    <div class="nav-icon" data-page="explore"><i class="fas fa-compass"></i></div>
+    <div class="nav-icon" data-page="upload"><i class="fas fa-plus-square"></i></div>
+    <div class="nav-icon" data-page="activity"><i class="fas fa-heart"></i></div>
+    <div class="nav-icon" data-page="profile"><i class="fas fa-user"></i></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="imageModal">
+    <div class="modal-content">
+      <span class="modal-close" id="modalClose">&times;</span>
+      <img src="" class="modal-img" id="modalImage">
+      <a href="#" class="modal-link" id="modalLink" target="_blank">View on ImageTwist</a>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div class="admin-panel" id="adminPanel">
+    <h2>Admin Panel - Manage Posts</h2>
+    <div class="admin-actions">
+      <button onclick="openAddPostModal()">+ Add New Post</button>
+    </div>
+    <div class="post-list" id="postList"></div>
+  </div>
+
+  <!-- Modal for Adding/Editing Posts -->
+  <div class="modal" id="postModal">
+    <div class="modal-content">
+      <span class="modal-close-btn" onclick="closePostModal()">&times;</span>
+      <h3 id="modalTitle">Add New Post</h3>
+      <form id="postForm">
+        <label>Thumbnail URL:</label>
+        <input type="text" id="thumbnail" required />
+
+        <label>Link:</label>
+        <input type="text" id="link" required />
+
+        <label>Caption:</label>
+        <textarea id="caption" rows="4" required></textarea>
+
+        <input type="hidden" id="editIndex" value="-1" />
+        <button type="submit">Save Post</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const user = {
+    username: "ziia",
+    avatar: "/ziia.png",
+    location: "USA"
+  };
+
+  const photoFeed = document.getElementById('photoFeed');
+  const imageModal = document.getElementById('imageModal');
+  const modalImage = document.getElementById('modalImage');
+  const modalLink = document.getElementById('modalLink');
+  const modalClose = document.getElementById('modalClose');
+  const searchInput = document.getElementById('searchInput');
+  const navIcons = document.querySelectorAll('.nav-icon');
+
+  let allPosts = [];
+  let currentPostIndex = 0;
+  const POSTS_PER_LOAD = 5;
+
+  // Load from localStorage or default
+  function loadPostsFromStorage() {
+    const stored = localStorage.getItem("posts");
+    if (stored) {
+      allPosts = JSON.parse(stored);
+    } else {
+      allPosts = [
+        {
+          "thumbnail": "https://img69.imagetwist.com/th/69353/1ncb9lxbi7wq.jpg", 
+          "link": "https://imagetwist.com/1ncb9lxbi7wq/face-swahhhhhp.png.html", 
+          "caption": "Beautiful day for creativity! ✨ #art #photography"
+        },
+        {
+          "thumbnail": "https://img69.imagetwist.com/th/68538/g5rsgzs8azxf.jpg", 
+          "link": "https://imagetwist.com/g5rsgzs8azxf/fachgfffggwap.png.html", 
+          "caption": "Working on new projects 🎨 #design #creative"
+        }
+      ];
+      savePostsToStorage();
+    }
+  }
+
+  function savePostsToStorage() {
+    localStorage.setItem("posts", JSON.stringify(allPosts));
+  }
+
+  function loadMorePosts() {
+    const loadingMessage = document.getElementById('loadingMessage');
+    loadingMessage.style.display = 'block';
+
+    setTimeout(() => {
+      const postsToShow = allPosts.slice(currentPostIndex, currentPostIndex + POSTS_PER_LOAD);
+      if (postsToShow.length === 0) {
+        loadingMessage.textContent = "No more posts.";
+        return;
+      }
+
+      postsToShow.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'photo-card';
+        card.innerHTML = `
+          <div class="photo-header">
+            <img src="${user.avatar}" class="user-avatar" alt="User Avatar">
+            <div class="user-info">
+              <div class="username">${user.username}</div>
+              <div class="location">${user.location}</div>
+            </div>
+            <i class="fas fa-ellipsis-h"></i>
+          </div>
+          <div class="photo-container">
+            <img src="${item.thumbnail}" class="photo-img" data-index="${currentPostIndex + index}">
+          </div>
+          <div class="photo-actions">
+            <div class="action-icons">
+              <i class="far fa-heart action-icon like-btn"></i>
+              <i class="far fa-paper-plane action-icon share-btn" data-link="${item.link}"></i>
+            </div>
+            <i class="far fa-bookmark save-icon"></i>
+          </div>
+          <div class="photo-likes">${Math.floor(Math.random() * 1000)} likes</div>
+          <div class="photo-caption">
+            <span class="caption-username">${user.username}</span>
+            ${item.caption}
+          </div>
+        `;
+        photoFeed.appendChild(card);
+      });
+
+      currentPostIndex += POSTS_PER_LOAD;
+      attachListeners(allPosts);
+      loadingMessage.style.display = 'none';
+    }, 500);
+  }
+
+  function loadAllPosts() {
+    loadPostsFromStorage();
+    allPosts = shuffleArray(allPosts);
+    currentPostIndex = 0;
+    photoFeed.innerHTML = '';
+    loadMorePosts();
+  }
+
+  function shuffleArray(array) {
+    return [...array].sort(() => Math.random() - 0.5);
+  }
+
+  function attachListeners(posts) {
+    document.querySelectorAll('.photo-img').forEach(img => {
+      img.addEventListener('click', e => {
+        const index = e.target.getAttribute('data-index');
+        openImageModal(posts[index]);
+      });
+    });
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        this.classList.toggle('liked');
+        this.classList.toggle('far');
+        this.classList.toggle('fas');
+      });
+    });
+    document.querySelectorAll('.share-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const link = this.getAttribute('data-link');
+        navigator.clipboard.writeText(link).then(() => alert('Link copied!'));
+      });
+    });
+    searchInput.addEventListener('input', e => {
+      const term = e.target.value.toLowerCase();
+      document.querySelectorAll('.photo-card').forEach(card => {
+        const caption = card.querySelector('.photo-caption').textContent.toLowerCase();
+        card.style.display = caption.includes(term) ? 'block' : 'none';
+      });
+    });
+  }
+
+  function openImageModal(item) {
+    modalImage.src = item.thumbnail;
+    modalLink.href = item.link;
+    imageModal.style.display = 'flex';
+  }
+
+  window.addEventListener('scroll', () => {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 600 && currentPostIndex < allPosts.length) {
+      loadMorePosts();
+    }
+  });
+
+  // Admin Panel Functions
+  const adminPanel = document.getElementById("adminPanel");
+  const postList = document.getElementById("postList");
+
+  function renderAdminPosts() {
+    postList.innerHTML = "";
+    allPosts.forEach((post, index) => {
+      const div = document.createElement("div");
+      div.className = "post-item";
+      div.innerHTML = `
+        <div>
+          <strong>${post.caption.substring(0, 30)}</strong><br/>
+          <small>${post.thumbnail}</small>
+        </div>
+        <div class="post-controls">
+          <button onclick="editPost(${index})"><i class="fas fa-edit"></i></button>
+          <button onclick="deletePost(${index})"><i class="fas fa-trash"></i></button>
+        </div>
+      `;
+      postList.appendChild(div);
+    });
+  }
+
+  function openAddPostModal() {
+    document.getElementById("modalTitle").innerText = "Add New Post";
+    document.getElementById("thumbnail").value = "";
+    document.getElementById("link").value = "";
+    document.getElementById("caption").value = "";
+    document.getElementById("editIndex").value = "-1";
+    document.getElementById("postModal").style.display = "flex";
+  }
+
+  function editPost(index) {
+    const post = allPosts[index];
+    document.getElementById("modalTitle").innerText = "Edit Post";
+    document.getElementById("thumbnail").value = post.thumbnail;
+    document.getElementById("link").value = post.link;
+    document.getElementById("caption").value = post.caption;
+    document.getElementById("editIndex").value = index;
+    document.getElementById("postModal").style.display = "flex";
+  }
+
+  function deletePost(index) {
+    if (confirm("Delete this post?")) {
+      allPosts.splice(index, 1);
+      savePostsToStorage();
+      renderAdminPosts();
+      loadAllPosts();
+    }
+  }
+
+  function closePostModal() {
+    document.getElementById("postModal").style.display = "none";
+  }
+
+  document.getElementById("postForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const thumbnail = document.getElementById("thumbnail").value.trim();
+    const link = document.getElementById("link").value.trim();
+    const caption = document.getElementById("caption").value.trim();
+    const editIndex = parseInt(document.getElementById("editIndex").value);
+
+    if (thumbnail && link && caption) {
+      if (editIndex >= 0) {
+        allPosts[editIndex] = { thumbnail, link, caption };
+      } else {
+        allPosts.push({ thumbnail, link, caption });
+      }
+      savePostsToStorage();
+      renderAdminPosts();
+      loadAllPosts();
+      closePostModal();
+    }
+  });
+
+  // Initial Load
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAllPosts();
+    renderAdminPosts();
+
+    modalClose.addEventListener('click', () => imageModal.style.display = 'none');
+    window.addEventListener('click', e => {
+      if (e.target === imageModal) imageModal.style.display = 'none';
+    });
+
+    navIcons.forEach(icon => {
+      icon.addEventListener('click', () => {
+        navIcons.forEach(i => i.classList.remove('active'));
+        icon.classList.add('active');
+
+        const page = icon.getAttribute("data-page");
+        if (page === "upload") {
+          adminPanel.style.display = adminPanel.style.display === "none" ? "block" : "block";
+        } else {
+          adminPanel.style.display = "none";
+        }
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
