@@ -33,6 +33,7 @@
             background: white;
             min-height: 100vh;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            padding-bottom: 60px; /* Space for bottom nav */
         }
         
         header {
@@ -126,10 +127,25 @@
         .action-icon {
             font-size: 1.5rem;
             color: var(--text-color);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .action-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .action-icon.liked {
+            color: #ed4956;
         }
         
         .save-icon {
             font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .save-icon.saved {
+            color: var(--primary-color);
         }
         
         .photo-likes {
@@ -166,15 +182,22 @@
             padding: 12px 0;
             max-width: 600px;
             margin: 0 auto;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
         }
         
         .nav-icon {
             font-size: 1.4rem;
             color: #666;
+            cursor: pointer;
+            transition: color 0.2s;
         }
         
         .nav-icon.active {
+            color: var(--primary-color);
+        }
+        
+        .nav-icon:hover {
             color: var(--primary-color);
         }
         
@@ -198,23 +221,27 @@
         </div>
         
         <div class="bottom-nav">
-            <div class="nav-icon active"><i class="fas fa-home"></i></div>
-            <div class="nav-icon"><i class="fas fa-compass"></i></div>
-            <div class="nav-icon"><i class="fas fa-plus-square"></i></div>
-            <div class="nav-icon"><i class="fas fa-heart"></i></div>
-            <div class="nav-icon"><i class="fas fa-user"></i></div>
+            <div class="nav-icon active" data-page="home"><i class="fas fa-home"></i></div>
+            <div class="nav-icon" data-page="explore"><i class="fas fa-compass"></i></div>
+            <div class="nav-icon" data-page="upload"><i class="fas fa-plus-square"></i></div>
+            <div class="nav-icon" data-page="activity"><i class="fas fa-heart"></i></div>
+            <div class="nav-icon" data-page="profile"><i class="fas fa-user"></i></div>
         </div>
     </div>
 
     <script>
         // Sample ImageTwist URLs (replace with your actual ImageTwist URLs)
         const imageTwistUrls = [
-            "https://imagetwist.com/example1.jpg",
-            "https://imagetwist.com/example2.jpg",
-            "https://imagetwist.com/example3.jpg",
-            "https://imagetwist.com/example4.jpg",
-            "https://imagetwist.com/example5.jpg",
-            "https://imagetwist.com/example6.jpg"
+            "https://via.placeholder.com/600/92c952",
+            "https://via.placeholder.com/600/771796",
+            "https://via.placeholder.com/600/24f355",
+            "https://via.placeholder.com/600/d32776",
+            "https://via.placeholder.com/600/f66b97",
+            "https://via.placeholder.com/600/56a8c2",
+            "https://via.placeholder.com/600/b0f7cc",
+            "https://via.placeholder.com/600/54176f",
+            "https://via.placeholder.com/600/51aa97",
+            "https://via.placeholder.com/600/810b14"
         ];
         
         // Sample user data
@@ -223,8 +250,7 @@
             { username: "nature_lover", avatar: "https://randomuser.me/api/portraits/men/32.jpg", location: "Yosemite National Park" },
             { username: "food_photographer", avatar: "https://randomuser.me/api/portraits/women/68.jpg", location: "Tokyo, Japan" },
             { username: "urban_explorer", avatar: "https://randomuser.me/api/portraits/men/75.jpg", location: "New York City" },
-            { username: "wildlife_shooter", avatar: "https://randomuser.me/api/portraits/women/22.jpg", location: "Serengeti, Tanzania" },
-            { username: "beach_vibes", avatar: "https://randomuser.me/api/portraits/men/55.jpg", location: "Maldives" }
+            { username: "wildlife_shooter", avatar: "https://randomuser.me/api/portraits/women/22.jpg", location: "Serengeti, Tanzania" }
         ];
         
         // Sample captions
@@ -234,8 +260,18 @@
             "Sushi perfection in Tokyo! #foodie #japan",
             "Concrete jungle where dreams are made of. #nyc #urban",
             "The king of the jungle. #wildlife #africa",
-            "Paradise found. #beach #vacation"
+            "Paradise found. #beach #vacation",
+            "Sunset views from my window. #sunset #views",
+            "Weekend vibes with friends. #weekend #friends",
+            "New adventure begins! #travel #adventure",
+            "Coffee and contemplation. #coffee #morning"
         ];
+        
+        // Current state
+        let currentPage = 'home';
+        let loadedPhotos = 0;
+        const photosPerLoad = 5;
+        let isLoading = false;
         
         // Function to generate random likes count
         function getRandomLikes() {
@@ -243,58 +279,181 @@
         }
         
         // Function to load photos
-        function loadPhotos() {
-            const photoFeed = document.getElementById('photoFeed');
-            photoFeed.innerHTML = '';
+        function loadPhotos(count = photosPerLoad) {
+            if (isLoading) return;
             
-            imageTwistUrls.forEach((imgUrl, index) => {
-                const user = users[index % users.length];
-                const caption = captions[index % captions.length];
+            isLoading = true;
+            const photoFeed = document.getElementById('photoFeed');
+            
+            // Remove loading message if it exists
+            const loadingElement = photoFeed.querySelector('.loading');
+            if (loadingElement) {
+                photoFeed.removeChild(loadingElement);
+            }
+            
+            // Create a temporary loading element
+            const tempLoading = document.createElement('div');
+            tempLoading.className = 'loading';
+            tempLoading.textContent = 'Loading more photos...';
+            photoFeed.appendChild(tempLoading);
+            
+            // Simulate API delay
+            setTimeout(() => {
+                photoFeed.removeChild(tempLoading);
                 
-                const photoCard = document.createElement('div');
-                photoCard.className = 'photo-card';
-                
-                photoCard.innerHTML = `
-                    <div class="photo-header">
-                        <img src="${user.avatar}" alt="${user.username}" class="user-avatar">
-                        <div class="user-info">
-                            <div class="username">${user.username}</div>
-                            <div class="location">${user.location}</div>
+                for (let i = 0; i < count; i++) {
+                    if (loadedPhotos >= imageTwistUrls.length) {
+                        // No more photos to load
+                        const noMorePhotos = document.createElement('div');
+                        noMorePhotos.className = 'loading';
+                        noMorePhotos.textContent = 'No more photos to load';
+                        photoFeed.appendChild(noMorePhotos);
+                        break;
+                    }
+                    
+                    const imgUrl = imageTwistUrls[loadedPhotos];
+                    const user = users[loadedPhotos % users.length];
+                    const caption = captions[loadedPhotos % captions.length];
+                    
+                    const photoCard = document.createElement('div');
+                    photoCard.className = 'photo-card';
+                    photoCard.dataset.id = loadedPhotos;
+                    
+                    photoCard.innerHTML = `
+                        <div class="photo-header">
+                            <img src="${user.avatar}" alt="${user.username}" class="user-avatar">
+                            <div class="user-info">
+                                <div class="username">${user.username}</div>
+                                <div class="location">${user.location}</div>
+                            </div>
+                            <i class="fas fa-ellipsis-h"></i>
                         </div>
-                        <i class="fas fa-ellipsis-h"></i>
-                    </div>
-                    <div class="photo-container">
-                        <img src="${imgUrl}" alt="Photo by ${user.username}" class="photo-img" loading="lazy">
-                    </div>
-                    <div class="photo-actions">
-                        <div class="action-icons">
-                            <i class="far fa-heart action-icon"></i>
-                            <i class="far fa-comment action-icon"></i>
-                            <i class="far fa-paper-plane action-icon"></i>
+                        <div class="photo-container">
+                            <img src="${imgUrl}" alt="Photo by ${user.username}" class="photo-img" loading="lazy">
                         </div>
-                        <i class="far fa-bookmark save-icon"></i>
-                    </div>
-                    <div class="photo-likes">${getRandomLikes().toLocaleString()} likes</div>
-                    <div class="photo-caption">
-                        <span class="caption-username">${user.username}</span>
-                        ${caption}
-                    </div>
-                `;
+                        <div class="photo-actions">
+                            <div class="action-icons">
+                                <i class="far fa-heart action-icon like-btn" data-liked="false"></i>
+                                <i class="far fa-comment action-icon"></i>
+                                <i class="far fa-paper-plane action-icon"></i>
+                            </div>
+                            <i class="far fa-bookmark save-icon" data-saved="false"></i>
+                        </div>
+                        <div class="photo-likes">${getRandomLikes().toLocaleString()} likes</div>
+                        <div class="photo-caption">
+                            <span class="caption-username">${user.username}</span>
+                            ${caption}
+                        </div>
+                    `;
+                    
+                    photoFeed.appendChild(photoCard);
+                    loadedPhotos++;
+                }
                 
-                photoFeed.appendChild(photoCard);
+                // Add event listeners to the new elements
+                addEventListeners();
+                isLoading = false;
+            }, 1000);
+        }
+        
+        // Function to handle like button clicks
+        function handleLikeClick(event) {
+            const likeBtn = event.target.closest('.like-btn');
+            if (!likeBtn) return;
+            
+            const isLiked = likeBtn.dataset.liked === 'true';
+            const likesElement = likeBtn.closest('.photo-card').querySelector('.photo-likes');
+            let currentLikes = parseInt(likesElement.textContent.replace(/,/g, ''));
+            
+            if (isLiked) {
+                likeBtn.classList.remove('liked');
+                likeBtn.classList.add('far');
+                likeBtn.classList.remove('fas');
+                likeBtn.dataset.liked = 'false';
+                currentLikes--;
+            } else {
+                likeBtn.classList.add('liked');
+                likeBtn.classList.remove('far');
+                likeBtn.classList.add('fas');
+                likeBtn.dataset.liked = 'true';
+                currentLikes++;
+            }
+            
+            likesElement.textContent = currentLikes.toLocaleString() + ' likes';
+        }
+        
+        // Function to handle save button clicks
+        function handleSaveClick(event) {
+            const saveBtn = event.target.closest('.save-icon');
+            if (!saveBtn) return;
+            
+            const isSaved = saveBtn.dataset.saved === 'true';
+            
+            if (isSaved) {
+                saveBtn.classList.remove('saved');
+                saveBtn.classList.add('far');
+                saveBtn.classList.remove('fas');
+                saveBtn.dataset.saved = 'false';
+            } else {
+                saveBtn.classList.add('saved');
+                saveBtn.classList.remove('far');
+                saveBtn.classList.add('fas');
+                saveBtn.dataset.saved = 'true';
+            }
+        }
+        
+        // Function to handle navigation clicks
+        function handleNavClick(event) {
+            const navIcon = event.target.closest('.nav-icon');
+            if (!navIcon) return;
+            
+            const page = navIcon.dataset.page;
+            if (page === currentPage) return;
+            
+            // Update active state
+            document.querySelectorAll('.nav-icon').forEach(icon => {
+                icon.classList.remove('active');
+            });
+            navIcon.classList.add('active');
+            currentPage = page;
+            
+            // In a real app, you would load different content here
+            console.log(`Switched to ${page} page`);
+        }
+        
+        // Function to add all event listeners
+        function addEventListeners() {
+            // Like buttons
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.addEventListener('click', handleLikeClick);
+            });
+            
+            // Save buttons
+            document.querySelectorAll('.save-icon').forEach(btn => {
+                btn.addEventListener('click', handleSaveClick);
             });
         }
         
-        // Load photos when page loads
-        window.addEventListener('DOMContentLoaded', loadPhotos);
+        // Initialize the app
+        function initApp() {
+            // Load initial photos
+            loadPhotos();
+            
+            // Add navigation event listeners
+            document.querySelector('.bottom-nav').addEventListener('click', handleNavClick);
+            
+            // Infinite scroll
+            window.addEventListener('scroll', () => {
+                const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+                
+                if (scrollTop + clientHeight >= scrollHeight - 100 && !isLoading) {
+                    loadPhotos();
+                }
+            });
+        }
         
-        // Infinite scroll simulation
-        window.addEventListener('scroll', () => {
-            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
-                // In a real app, you would fetch more photos here
-                console.log('Load more photos...');
-            }
-        });
+        // Start the app when page loads
+        window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
