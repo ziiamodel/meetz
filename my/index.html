@@ -276,121 +276,145 @@
   </div>
 
   <script>
-    const user = {
-      username: "ziia",
-      avatar: "/ziia.png",
-      location: "USA"
-    };
+  const user = {
+    username: "ziia",
+    avatar: "/ziia.png",
+    location: "USA"
+  };
 
-    const photoFeed = document.getElementById('photoFeed');
-    const imageModal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-    const modalLink = document.getElementById('modalLink');
-    const modalClose = document.getElementById('modalClose');
-    const searchInput = document.getElementById('searchInput');
-    const navIcons = document.querySelectorAll('.nav-icon');
+  const photoFeed = document.getElementById('photoFeed');
+  const imageModal = document.getElementById('imageModal');
+  const modalImage = document.getElementById('modalImage');
+  const modalLink = document.getElementById('modalLink');
+  const modalClose = document.getElementById('modalClose');
+  const searchInput = document.getElementById('searchInput');
+  const navIcons = document.querySelectorAll('.nav-icon');
 
-    function loadPhotos() {
-      fetch('posts.json')
-        .then(response => {
-          if (!response.ok) throw new Error("File not found");
-          return response.json();
-        })
-        .then(posts => {
-          photoFeed.innerHTML = '';
-          posts.forEach((item, index) => {
-            const card = document.createElement('div');
-            card.className = 'photo-card';
-            card.innerHTML = `
-              <div class="photo-header">
-                <img src="${user.avatar}" class="user-avatar" alt="User Avatar">
-                <div class="user-info">
-                  <div class="username">${user.username}</div>
-                  <div class="location">${user.location}</div>
-                </div>
-                <i class="fas fa-ellipsis-h"></i>
-              </div>
-              <div class="photo-container">
-                <img src="${item.thumbnail}" class="photo-img" data-index="${index}">
-              </div>
-              <div class="photo-actions">
-                <div class="action-icons">
-                  <i class="far fa-heart action-icon like-btn"></i>
-                 
-                  <i class="far fa-paper-plane action-icon share-btn" data-link="${item.link}"></i>
-                </div>
-                <i class="far fa-bookmark save-icon"></i>
-              </div>
-              <div class="photo-likes">${Math.floor(Math.random() * 1000)} likes</div>
-              <div class="photo-caption">
-                <span class="caption-username">${user.username}</span>
-                ${item.caption}
-              </div>
-            `;
-            photoFeed.appendChild(card);
-          });
-          attachListeners(posts);
-        })
-        .catch(err => {
-          console.error("Failed to load posts:", err);
-          photoFeed.innerHTML = '<div class="loading">Failed to load photos.</div>';
-        });
-    }
+  let allPosts = [];
+  let currentPostIndex = 0;
+  const POSTS_PER_LOAD = 5;
 
-    function attachListeners(posts) {
-      document.querySelectorAll('.photo-img').forEach(img => {
-        img.addEventListener('click', e => {
-          const index = e.target.getAttribute('data-index');
-          openImageModal(posts[index]);
-        });
+  // Load and parse JSON
+  function loadAllPosts() {
+    fetch('posts.json')
+      .then(response => {
+        if (!response.ok) throw new Error("File not found");
+        return response.json();
+      })
+      .then(posts => {
+        allPosts = shuffleArray(posts); // Shuffle for randomness
+        loadMorePosts();
+      })
+      .catch(err => {
+        console.error("Failed to load posts:", err);
+        photoFeed.innerHTML = '<div class="loading">Failed to load photos.</div>';
       });
+  }
 
-      document.querySelectorAll('.like-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-          this.classList.toggle('liked');
-          this.classList.toggle('far');
-          this.classList.toggle('fas');
-        });
-      });
+  // Display next batch of posts
+  function loadMorePosts() {
+    const postsToShow = allPosts.slice(currentPostIndex, currentPostIndex + POSTS_PER_LOAD);
+    if (postsToShow.length === 0) return;
 
-      document.querySelectorAll('.share-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-          const link = this.getAttribute('data-link');
-          navigator.clipboard.writeText(link).then(() => alert('Link copied!'));
-        });
-      });
+    postsToShow.forEach((item, index) => {
+      const card = document.createElement('div');
+      card.className = 'photo-card';
+      card.innerHTML = `
+        <div class="photo-header">
+          <img src="${user.avatar}" class="user-avatar" alt="User Avatar">
+          <div class="user-info">
+            <div class="username">${user.username}</div>
+            <div class="location">${user.location}</div>
+          </div>
+          <i class="fas fa-ellipsis-h"></i>
+        </div>
+        <div class="photo-container">
+          <img src="${item.thumbnail}" class="photo-img" data-index="${currentPostIndex + index}">
+        </div>
+        <div class="photo-actions">
+          <div class="action-icons">
+            <i class="far fa-heart action-icon like-btn"></i>
+            <i class="far fa-paper-plane action-icon share-btn" data-link="${item.link}"></i>
+          </div>
+          <i class="far fa-bookmark save-icon"></i>
+        </div>
+        <div class="photo-likes">${Math.floor(Math.random() * 1000)} likes</div>
+        <div class="photo-caption">
+          <span class="caption-username">${user.username}</span>
+          ${item.caption}
+        </div>
+      `;
+      photoFeed.appendChild(card);
+    });
 
-      searchInput.addEventListener('input', e => {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.photo-card').forEach(card => {
-          const caption = card.querySelector('.photo-caption').textContent.toLowerCase();
-          card.style.display = caption.includes(term) ? 'block' : 'none';
-        });
-      });
-    }
+    currentPostIndex += POSTS_PER_LOAD;
+    attachListeners(allPosts);
+  }
 
-    function openImageModal(item) {
-      modalImage.src = item.thumbnail;
-      modalLink.href = item.link;
-      imageModal.style.display = 'flex';
-    }
-
-    // Initial Load
-    document.addEventListener('DOMContentLoaded', () => {
-      loadPhotos();
-
-      modalClose.addEventListener('click', () => imageModal.style.display = 'none');
-      window.addEventListener('click', e => {
-        if (e.target === imageModal) imageModal.style.display = 'none';
-      });
-
-      navIcons.forEach(icon => {
-        icon.addEventListener('click', () => {
-          navIcons.forEach(i => i.classList.remove('active'));
-          icon.classList.add('active');
-        });
+  // Attach event listeners
+  function attachListeners(posts) {
+    document.querySelectorAll('.photo-img').forEach(img => {
+      img.addEventListener('click', e => {
+        const index = e.target.getAttribute('data-index');
+        openImageModal(posts[index]);
       });
     });
-  </script>
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        this.classList.toggle('liked');
+        this.classList.toggle('far');
+        this.classList.toggle('fas');
+      });
+    });
+    document.querySelectorAll('.share-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const link = this.getAttribute('data-link');
+        navigator.clipboard.writeText(link).then(() => alert('Link copied!'));
+      });
+    });
+    searchInput.addEventListener('input', e => {
+      const term = e.target.value.toLowerCase();
+      document.querySelectorAll('.photo-card').forEach(card => {
+        const caption = card.querySelector('.photo-caption').textContent.toLowerCase();
+        card.style.display = caption.includes(term) ? 'block' : 'none';
+      });
+    });
+  }
+
+  // Open modal
+  function openImageModal(item) {
+    modalImage.src = item.thumbnail;
+    modalLink.href = item.link;
+    imageModal.style.display = 'flex';
+  }
+
+  // Detect scroll end
+  window.addEventListener('scroll', () => {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && currentPostIndex < allPosts.length) {
+      loadMorePosts();
+    }
+  });
+
+  // Utility: Shuffle array
+  function shuffleArray(array) {
+    return [...array].sort(() => Math.random() - 0.5);
+  }
+
+  // Initial Load
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAllPosts();
+
+    modalClose.addEventListener('click', () => imageModal.style.display = 'none');
+    window.addEventListener('click', e => {
+      if (e.target === imageModal) imageModal.style.display = 'none';
+    });
+    navIcons.forEach(icon => {
+      icon.addEventListener('click', () => {
+        navIcons.forEach(i => i.classList.remove('active'));
+        icon.classList.add('active');
+      });
+    });
+  });
+</script>
 </body>
 </html>
