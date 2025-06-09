@@ -85,6 +85,7 @@ h2 {
   border-bottom: 1px solid #d0e2f2;
   cursor: pointer;
   transition: background 0.3s;
+  position: relative;
 }
 
 .fan:hover {
@@ -97,6 +98,14 @@ h2 {
 
 .fan.selected {
   background-color: #b3d7f7;
+}
+
+.fan.selected::after {
+  content: "✓";
+  position: absolute;
+  right: 10px;
+  color: #4aa3df;
+  font-weight: bold;
 }
 
 .avatar {
@@ -219,22 +228,44 @@ h2 {
 }
 
 /* Bulk Message Panel */
-.bulk-message-panel {
+.bulk-message-container {
   padding: 15px;
-  background: #fff;
-  border-radius: 8px;
-  margin: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  border: 1px solid #d0e2f2;
+  background: white;
+  border-top: 1px solid #d0e2f2;
 }
 
-.bulk-message-panel h3 {
-  margin-top: 0;
+.bulk-message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.bulk-message-header h3 {
+  margin: 0;
   color: #4aa3df;
-  text-align: center;
 }
 
-.bulk-message-panel textarea {
+.bulk-message-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.bulk-message-controls button {
+  padding: 5px 10px;
+  background: #4aa3df;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.bulk-message-controls button:hover {
+  background: #378ccc;
+}
+
+.bulk-message-textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #d0e2f2;
@@ -244,11 +275,20 @@ h2 {
   resize: vertical;
 }
 
-.selected-fans {
+.selected-fans-container {
+  margin-top: 10px;
+}
+
+.selected-fans-title {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.selected-fans-list {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin-bottom: 10px;
 }
 
 .selected-fan-tag {
@@ -348,25 +388,30 @@ h2 {
     <div class="chat-box" id="chatBox"></div>
     
     <!-- Bulk Message Panel -->
-    <div class="bulk-message-panel" id="bulkMessagePanel">
-      <h3>Bulk Message</h3>
-      <textarea id="bulkMessageText" placeholder="Type your message for multiple fans..."></textarea>
-      <div class="selected-fans" id="selectedFans"></div>
-      <button onclick="sendBulkMessage()">Send to Selected Fans</button>
+    <div class="bulk-message-container">
+      <div class="bulk-message-header">
+        <h3>Bulk Message</h3>
+        <div class="bulk-message-controls">
+          <button onclick="clearSelectedFans()">Clear Selection</button>
+          <button onclick="sendBulkMessage()">Send to Selected</button>
+        </div>
+      </div>
+      <textarea class="bulk-message-textarea" id="bulkMessageText" placeholder="Type your message for selected fans..."></textarea>
+      <div class="selected-fans-container">
+        <div class="selected-fans-title">Selected Fans (<span id="selectedCount">0</span>):</div>
+        <div class="selected-fans-list" id="selectedFansList"></div>
+      </div>
     </div>
     
     <!-- Flirty Suggestions Panel -->
     <div class="suggestion-panel">
-      <h3>Flirty Suggestions</h3>
+      <h3>Quick Messages</h3>
       <div class="suggestion-buttons">
         <button onclick="useSuggestion(1)">You're making me blush 😊</button>
         <button onclick="useSuggestion(2)">I can't stop thinking about you 💭</button>
         <button onclick="useSuggestion(3)">You're my favorite part of the day 🌟</button>
         <button onclick="useSuggestion(4)">I'd love to get to know you better 😉</button>
         <button onclick="useSuggestion(5)">You have such beautiful energy ✨</button>
-        <button onclick="useSuggestion(6)">Your smile brightens my day ☀️</button>
-        <button onclick="useSuggestion(7)">I'm addicted to our conversations 💘</button>
-        <button onclick="useSuggestion(8)">You're absolutely stunning 😍</button>
       </div>
     </div>
     
@@ -402,7 +447,7 @@ h2 {
   let selectedFan = '';
   let activeChatRef = null;
   let typingTimeout;
-  let selectedFans = []; // Array to store selected fans for bulk messaging
+  let selectedFans = new Set(); // Using Set to avoid duplicates
 
   function adminLogin() {
     const email = document.getElementById('adminEmail').value;
@@ -442,15 +487,16 @@ h2 {
 
         const fanDiv = document.createElement('div');
         fanDiv.className = 'fan';
+        fanDiv.dataset.fanName = fanName;
+        
         fanDiv.onclick = (e) => {
           // Check if Ctrl or Cmd key is pressed for multi-select
           if (e.ctrlKey || e.metaKey) {
-            toggleFanSelection(fanName, fanDiv);
+            e.preventDefault();
+            toggleFanSelection(fanName);
           } else {
             // Regular click - load chat
             loadFanChat(fanName);
-            // Clear any existing selections
-            clearFanSelections();
           }
         };
 
@@ -504,32 +550,37 @@ h2 {
     });
   }
 
-  function toggleFanSelection(fanName, fanDiv) {
-    const index = selectedFans.indexOf(fanName);
-    if (index === -1) {
-      // Add to selection
-      selectedFans.push(fanName);
-      fanDiv.classList.add('selected');
-      updateSelectedFansDisplay();
-    } else {
+  function toggleFanSelection(fanName) {
+    const fanDiv = document.querySelector(`.fan[data-fan-name="${fanName}"]`);
+    
+    if (selectedFans.has(fanName)) {
       // Remove from selection
-      selectedFans.splice(index, 1);
+      selectedFans.delete(fanName);
       fanDiv.classList.remove('selected');
-      updateSelectedFansDisplay();
+    } else {
+      // Add to selection
+      selectedFans.add(fanName);
+      fanDiv.classList.add('selected');
     }
+    
+    updateSelectedFansDisplay();
   }
 
-  function clearFanSelections() {
-    document.querySelectorAll('.fan.selected').forEach(el => {
-      el.classList.remove('selected');
+  function clearSelectedFans() {
+    selectedFans.forEach(fanName => {
+      const fanDiv = document.querySelector(`.fan[data-fan-name="${fanName}"]`);
+      if (fanDiv) fanDiv.classList.remove('selected');
     });
-    selectedFans = [];
+    selectedFans.clear();
     updateSelectedFansDisplay();
   }
 
   function updateSelectedFansDisplay() {
-    const container = document.getElementById('selectedFans');
+    const container = document.getElementById('selectedFansList');
+    const countElement = document.getElementById('selectedCount');
+    
     container.innerHTML = '';
+    countElement.textContent = selectedFans.size;
     
     selectedFans.forEach(fanName => {
       const tag = document.createElement('div');
@@ -543,21 +594,17 @@ h2 {
   }
 
   function removeSelectedFan(fanName) {
-    const index = selectedFans.indexOf(fanName);
-    if (index !== -1) {
-      selectedFans.splice(index, 1);
-      document.querySelectorAll('.fan').forEach(el => {
-        if (el.innerText.includes(fanName)) {
-          el.classList.remove('selected');
-        }
-      });
+    if (selectedFans.has(fanName)) {
+      selectedFans.delete(fanName);
+      const fanDiv = document.querySelector(`.fan[data-fan-name="${fanName}"]`);
+      if (fanDiv) fanDiv.classList.remove('selected');
       updateSelectedFansDisplay();
     }
   }
 
   function loadFanChat(fanName) {
     selectedFan = fanName;
-    clearFanSelections();
+    clearSelectedFans();
 
     if (activeChatRef) activeChatRef.off();
     activeChatRef = db.ref(`chats/${fanName}`);
@@ -629,7 +676,7 @@ h2 {
       // Highlight active fan
       document.querySelectorAll('.fan').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.fan').forEach(el => {
-        if (el.innerText.includes(fanName)) el.classList.add('active');
+        if (el.dataset.fanName === fanName) el.classList.add('active');
       });
     });
   }
@@ -650,19 +697,32 @@ h2 {
 
   function sendBulkMessage() {
     const msg = document.getElementById('bulkMessageText').value.trim();
-    if (!msg || selectedFans.length === 0) return;
+    if (!msg || selectedFans.size === 0) {
+      alert('Please select fans and type a message');
+      return;
+    }
 
+    // Confirm before sending
+    if (!confirm(`Send this message to ${selectedFans.size} fans?`)) {
+      return;
+    }
+
+    let sentCount = 0;
     selectedFans.forEach(fanName => {
       db.ref(`chats/${fanName}`).push({
         sender: 'admin',
         text: msg,
         timestamp: Date.now(),
         status: 'sent'
+      }).then(() => {
+        sentCount++;
+        if (sentCount === selectedFans.size) {
+          alert(`Message sent to ${sentCount} fans successfully!`);
+          document.getElementById('bulkMessageText').value = '';
+          clearSelectedFans();
+        }
       });
     });
-
-    document.getElementById('bulkMessageText').value = '';
-    clearFanSelections();
   }
 
   function useSuggestion(index) {
@@ -671,13 +731,10 @@ h2 {
       "I can't stop thinking about you 💭",
       "You're my favorite part of the day 🌟",
       "I'd love to get to know you better 😉",
-      "You have such beautiful energy ✨",
-      "Your smile brightens my day ☀️",
-      "I'm addicted to our conversations 💘",
-      "You're absolutely stunning 😍"
+      "You have such beautiful energy ✨"
     ];
     
-    if (selectedFans.length > 0) {
+    if (selectedFans.size > 0) {
       // If in bulk mode, add to bulk message
       const bulkTextarea = document.getElementById('bulkMessageText');
       bulkTextarea.value = suggestions[index - 1];
