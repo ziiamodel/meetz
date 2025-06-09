@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📷 Mobile-Style Photo Scroll</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+
+    header {
+      background-color: #fff;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .photo-feed {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+      gap: 1rem;
+      min-height: 100vh;
+    }
+
+    .feed-img {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+
+    .feed-img:hover {
+      transform: scale(1.02);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📷 My Photo Feed</h1>
+  </header>
+
+  <main class="photo-feed" id="photoFeed">
+    <!-- Images will be loaded here -->
+  </main>
+
+  <script>
+    const imageUrls = [
+      "https://s97.postimg.cc/mk1yx68r3/photo1.jpg", 
+      "https://s97.postimg.cc/abc123xyz/photo2.jpg", 
+      "https://s97.postimg.cc/def456ghi/photo3.jpg" 
+    ];
+
+    const feed = document.getElementById("photoFeed");
+
+    function loadImages() {
+      imageUrls.forEach(url => {
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = "User Photo";
+        img.classList.add("feed-img");
+        feed.appendChild(img);
+      });
+    }
+
+    // Initial Load
+    loadImages();
+
+    // Infinite Scroll
+    window.addEventListener("scroll", () => {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+        loadImages(); // Reuse same images for demo
+      }
+    });
+  </script>
+</body>
+</html>
