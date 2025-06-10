@@ -3,181 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <title>Admin Post Manager</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      padding: 20px;
-      max-width: 900px;
-      margin: auto;
-    }
-    h1, h2 {
-      text-align: center;
-    }
-    input, button {
-      padding: 10px;
-      margin: 5px 0;
-      width: 100%;
-      max-width: 400px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: #c3355d;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
+    body { font-family: Arial; padding: 20px; }
+    input, button { margin: 5px 0; padding: 10px; width: 300px; max-width: 90%; }
     .post {
       display: flex;
+      gap: 10px;
       align-items: center;
-      gap: 15px;
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
     }
-    .thumbnail {
-      width: 100px;
-      height: auto;
-      border-radius: 5px;
-    }
-    .delete-btn {
-      background-color: red;
-      padding: 5px 10px;
-      font-size: 14px;
-    }
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 15px;
-      margin-top: 20px;
-    }
-    .form-group {
-      margin-bottom: 10px;
-    }
-    .actions {
-      text-align: center;
-      margin-top: 20px;
-    }
+    img { width: 100px; height: auto; }
+    .delete-btn { background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; }
   </style>
 </head>
 <body>
 
   <h1>📁 Admin Post Manager</h1>
 
-  <!-- Add New Post -->
+  <!-- Add Post -->
   <div>
-    <div class="form-group">
-      <input type="text" id="thumbnail" placeholder="Thumbnail URL" required />
-    </div>
-    <div class="form-group">
-      <input type="text" id="link" placeholder="Post Link" required />
-    </div>
-    <div class="form-group">
-      <input type="text" id="caption" placeholder="Caption e.g. #art #photo" required />
-    </div>
+    <input type="text" id="thumbnail" placeholder="Thumbnail URL" required><br>
+    <input type="text" id="link" placeholder="Post Link" required><br>
+    <input type="text" id="caption" placeholder="Caption e.g. #art #photo" required><br>
     <button onclick="addPost()">Add Post</button>
-  </div>
-
-  <hr />
-
-  <!-- Export / Import -->
-  <div class="actions">
-    <button onclick="exportPosts()">⬇️ Export posts.json</button>
-    <input type="file" id="importFile" accept=".json" onchange="importPosts()" />
   </div>
 
   <hr />
 
   <!-- Post List -->
   <h2>📋 Existing Posts</h2>
-  <div class="gallery" id="postList"></div>
+  <div id="postList"></div>
 
   <script>
     let posts = [];
 
-    // Load posts from posts.json
     async function loadPosts() {
-      try {
-        const res = await fetch('posts.json?' + new Date().getTime()); // Prevent caching
-        posts = await res.json();
-        renderPosts();
-      } catch (e) {
-        alert("Failed to load posts.json");
-        console.error(e);
-      }
+      const res = await fetch('/api/get-posts');
+      posts = await res.json();
+      renderPosts();
     }
 
     function renderPosts() {
-      const list = document.getElementById("postList");
+      const list = document.getElementById('postList');
       list.innerHTML = '';
       posts.forEach((post, index) => {
-        const div = document.createElement("div");
-        div.className = "post";
+        const div = document.createElement('div');
+        div.className = 'post';
         div.innerHTML = `
-          <img class="thumbnail" src="${post.thumbnail}" alt="Thumbnail" />
-          <div>
-            <strong>${post.caption}</strong><br/>
-            <a href="${post.link}" target="_blank">🔗 View Post</a>
-          </div>
-          <button class="delete-btn" onclick="deletePost(${index})">🗑️ Delete</button>
+          <img src="${post.thumbnail}" alt="Thumbnail" width="100" />
+          <strong>${post.caption}</strong>
+          <button class="delete-btn" onclick="deletePost(${index})">Delete</button>
         `;
         list.appendChild(div);
       });
     }
 
-    function addPost() {
-      const thumbnail = document.getElementById("thumbnail").value.trim();
-      const link = document.getElementById("link").value.trim();
-      const caption = document.getElementById("caption").value.trim();
+    async function addPost() {
+      const thumbnail = document.getElementById('thumbnail').value;
+      const link = document.getElementById('link').value;
+      const caption = document.getElementById('caption').value;
 
-      if (!thumbnail || !link || !caption) {
-        alert("All fields are required!");
-        return;
-      }
+      if (!thumbnail || !link || !caption) return alert("All fields required!");
 
       posts.unshift({ thumbnail, link, caption });
+      await savePosts();
       renderPosts();
 
-      document.getElementById("thumbnail").value = "";
-      document.getElementById("link").value = "";
-      document.getElementById("caption").value = "";
+      document.getElementById('thumbnail').value = '';
+      document.getElementById('link').value = '';
+      document.getElementById('caption').value = '';
     }
 
-    function deletePost(index) {
+    async function deletePost(index) {
       if (!confirm("Delete this post?")) return;
       posts.splice(index, 1);
+      await savePosts();
       renderPosts();
     }
 
-    function exportPosts() {
-      const dataStr = JSON.stringify(posts, null, 2);
-      const blob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "posts.json";
-      a.click();
-    }
-
-    function importPosts() {
-      const file = document.getElementById("importFile").files[0];
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        try {
-          const imported = JSON.parse(event.target.result);
-          posts = imported;
-          renderPosts();
-          alert("✅ Posts imported successfully!");
-        } catch (e) {
-          alert("❌ Invalid JSON file.");
-        }
-      };
-      reader.readAsText(file);
+    async function savePosts() {
+      await fetch('/api/save-posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(posts)
+      });
     }
 
     // Initial Load
