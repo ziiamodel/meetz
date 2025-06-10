@@ -98,19 +98,19 @@
   <div class="gallery" id="postList"></div>
 
   <script>
-    // Simulated database
-    let posts = [
-      {
-        thumbnail: "https://example.com/thumb1.jpg", 
-        link: "https://example.com/post1.html", 
-        caption: "Beautiful day for creativity! ✨ #art #photography"
-      },
-      {
-        thumbnail: "https://example.com/thumb2.jpg", 
-        link: "https://example.com/post2.html", 
-        caption: "Working on new projects 🎨 #design #creative"
+    let posts = [];
+
+    // Load posts from posts.json
+    async function loadPosts() {
+      try {
+        const res = await fetch('posts.json?' + new Date().getTime()); // Prevent caching
+        posts = await res.json();
+        renderPosts();
+      } catch (e) {
+        alert("Failed to load posts.json");
+        console.error(e);
       }
-    ];
+    }
 
     function renderPosts() {
       const list = document.getElementById("postList");
@@ -181,7 +181,7 @@
     }
 
     // Initial Load
-    renderPosts();
+    loadPosts();
   </script>
 </body>
 </html>
