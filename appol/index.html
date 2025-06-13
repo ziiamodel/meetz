@@ -33,6 +33,46 @@
     </style>
 </head>
 <body>
+
+
+<div class="container">
+        <button id="countdown-btn" disabled>Please Wait (20s)</button>
+        <div class="countdown-text" id="countdown-text">Button will be enabled in 20 seconds</div>
+    </div>
+
+    <script>
+        const countdownBtn = document.getElementById('countdown-btn');
+        const countdownText = document.getElementById('countdown-text');
+        let secondsLeft = 20;
+        
+        // Update button text every second
+        const countdownInterval = setInterval(() => {
+            secondsLeft--;
+            countdownBtn.textContent = `Please Wait (${secondsLeft}s)`;
+            countdownText.textContent = `Button will be enabled in ${secondsLeft} seconds`;
+            
+            if (secondsLeft <= 0) {
+                clearInterval(countdownInterval);
+                enableButton();
+            }
+        }, 1000);
+        
+        function enableButton() {
+            countdownBtn.textContent = "Continue";
+            countdownBtn.classList.add("active");
+            countdownBtn.disabled = false;
+            countdownText.textContent = "Button is now ready! Click to continue";
+            
+            // Set the link destination when button is enabled
+            countdownBtn.addEventListener('click', () => {
+                window.location.href = "https://ziia.vercel.app"; // Change this to your desired link
+            });
+        }
+    </script>
+
+
+
+  
     <!-- Optional overlay div - remove if you don't need it -->
     <!-- <div class="overlay"></div> -->
     
