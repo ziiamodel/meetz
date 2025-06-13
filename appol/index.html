@@ -30,6 +30,40 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.3); /* Adjust opacity as needed */
         }
+         .container {
+            text-align: center;
+        }
+        
+        #countdown-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            min-width: 200px;
+        }
+        
+        #countdown-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #countdown-btn.active {
+            background-color: #2196F3;
+        }
+        
+        #countdown-btn.active:hover {
+            background-color: #0b7dda;
+        }
+        
+        .countdown-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
