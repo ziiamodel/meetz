@@ -1,1 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Viewer with Notifications</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
 
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .background-container {
+            flex: 1;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s ease;
+            position: relative;
+        }
+
+        .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .notification-prompt {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .notification-prompt h2 {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .notification-prompt p {
+            margin-bottom: 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-secondary {
+            background-color: #f44336;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d32f2f;
+        }
+
+        @media (max-width: 768px) {
+            .notification-prompt h2 {
+                font-size: 1.2rem;
+            }
+            
+            .notification-prompt p {
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn-container {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-container" id="backgroundContainer">
+        <div class="overlay">
+            <div class="notification-prompt" id="notificationPrompt">
+                <h2>Enable Notifications</h2>
+                <p>Allow notifications to view the full image and receive updates when new images are available.</p>
+                <div class="btn-container">
+                    <button class="btn btn-primary" id="allowBtn">Allow Notifications</button>
+                    <button class="btn btn-secondary" id="denyBtn">Not Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const backgroundContainer = document.getElementById('backgroundContainer');
+            const allowBtn = document.getElementById('allowBtn');
+            const denyBtn = document.getElementById('denyBtn');
+            const notificationPrompt = document.getElementById('notificationPrompt');
+
+            // Set a placeholder background image (replace with your actual image)
+            backgroundContainer.style.backgroundImage = "url('https://source.unsplash.com/random/1920x1080')";
+
+            // Check if notifications are already permitted
+            if (Notification.permission === 'granted') {
+                notificationPrompt.style.display = 'none';
+                // Here you would load the full image or whatever you want to show
+            } else if (Notification.permission === 'denied') {
+                notificationPrompt.innerHTML = `
+                    <h2>Notifications Blocked</h2>
+                    <p>You have blocked notifications. Please enable them in your browser settings to view the full image.</p>
+                `;
+            }
+
+            // Allow notifications button click handler
+            allowBtn.addEventListener('click', function() {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        notificationPrompt.style.display = 'none';
+                        // Here you would load the full image or whatever you want to show
+                        showNotification('Thank you for enabling notifications!');
+                    } else {
+                        notificationPrompt.innerHTML = `
+                            <h2>Notifications Blocked</h2>
+                            <p>You have blocked notifications. Please enable them in your browser settings to view the full image.</p>
+                        `;
+                    }
+                });
+            });
+
+            // Deny button click handler
+            denyBtn.addEventListener('click', function() {
+                notificationPrompt.style.display = 'none';
+                // You could set a timer to show this again later
+                setTimeout(() => {
+                    notificationPrompt.style.display = 'block';
+                }, 10000); // Show again after 10 seconds
+            });
+
+            // Function to show a notification
+            function showNotification(message) {
+                if (Notification.permission === 'granted') {
+                    new Notification('Image Viewer', {
+                        body: message,
+                        icon: 'https://via.placeholder.com/128/4CAF50/FFFFFF?text=IMG'
+                    });
+                }
+            }
+
+            // Make the page responsive to window resize
+            window.addEventListener('resize', function() {
+                // You could add responsive behaviors here if needed
+            });
+        });
+    </script>
+</body>
+</html>
